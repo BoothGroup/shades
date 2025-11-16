@@ -5,7 +5,7 @@ from shadow_ci.estimator import GroundStateEstimator
 from shadow_ci.utils import get_hf_reference
 from shadow_ci.utils import get_single_excitations
 import numpy as np
-from scipy.linalg import expm
+from scipy.linalg import expm, eigh
 from copy import copy
 
 # def _update_mo_coeff(mo_coeff, t1, ovlp, damping=damping, diis=diis):
@@ -230,13 +230,13 @@ class BruecknerSolver:
             bmo_occ = np.linalg.qr(bmo_occ)[0]
         else:
             dm_occ = np.dot(bmo_occ, bmo_occ.T)
-            e, v = scipy.linalg.eigh(dm_occ, b=ovlp, type=2)
+            e, v = eigh(dm_occ, b=ovlp, type=2)
             bmo_occ = v[:, -nocc:]
 
         if diis: 
             dm_occ = np.dot(bmo_occ, bmo_occ.T)
             dm_occ = diis.update(dm_occ)
-            e, v = scipy.linalg.eigh(dm_occ, b=ovlp, type=2)
+            e, v = eigh(dm_occ, b=ovlp, type=2)
             bmo_occ = v[:, -nocc:]
         
         # Virtual space
@@ -245,7 +245,7 @@ class BruecknerSolver:
         else:
             dm_vir = np.linalg.inv(ovlp) - np.dot(bmo_occ, bmo_occ.T)
 
-        _, v = scipy.linalg.eigh(dm_vir, b=ovlp, type=2)
+        _, v = eigh(dm_vir, b=ovlp, type=2)
         bmo_vir = v[:, -nvir:]
 
         assert bmo_occ.shape[-1] == nocc
