@@ -5,7 +5,57 @@ from shadow_ci.estimator import GroundStateEstimator
 from shadow_ci.utils import get_hf_reference
 from shadow_ci.utils import get_single_excitations
 import numpy as np
-import scipy.linalg
+from scipy.linalg import expm
+from copy import copy
+
+# def _update_mo_coeff(mo_coeff, t1, ovlp, damping=damping, diis=diis):
+
+
+# def _update_mf(mf: scf.hf.RHF, t1: np.ndarray, canonicalize=True, damping=0.0, diis: Optional[lib.diis.DIIS] = None, inplace: bool = True):
+
+#     if not inplace:
+#         mf = copy(mf)
+
+#     mo_coeff = mf.mo_coeff
+#     norb = mo_coeff.shape[-1]
+#     nocc, _ = mf.mol.nelec
+#     nvirt = norb - nocc
+
+#     if not t1.shape == (nocc, nvirt):
+#         raise ValueError("Incorrect shape for T1 amplitudes.")
+    
+#     ovlp = mf.get_ovlp()
+#     if np.allclose(ovlp, np.eye(ovlp.shape[-1])):
+#         ovlp = None
+
+#     bmo_occ, bmo_vir = self._update_mo_coeff(mo_coeff, t1, ovlp, damping=damping, diis=diis)
+
+#     if canonicalize:
+#         if canonicalize == "hcore":
+#             h1e = mf.get_hcore()
+#         else:
+#             h1e = mf.get_fock()
+#         _, r = np.linalg.eigh(np.linalg.multi_dot((bmo_occ.T, h1e, bmo_occ)))
+#         bmo_occ = np.dot(bmo_occ, r)
+#         _, r = np.linalg.eigh(np.linalg.multi_dot((bmo_vir.T, h1e, bmo_vir)))
+#         bmo_vir = np.dot(bmo_vir, r)
+
+#     bmo = np.hstack((bmo_occ, bmo_vir))
+#     if ovlp is None:
+#         assert np.allclose(np.dot(bmo.T, bmo), np.eye(norb))
+#     else:
+#         assert np.allclose(np.linalg.multi_dot((bmo.T, ovlp, bmo)), np.eye(norb))
+
+#     if ovlp is None:
+#         assert np.allclose(np.dot(bmo.T, bmo), np.eye(norb))
+#     else:
+#         assert np.allclose(np.linalg.multi_dot((bmo.T, ovlp, bmo)), np.eye(norb))
+
+#     self.mf.mo_coeff = bmo
+#     self.mf.e_tot = self.mf.energy_tot()
+
+#     return self.mf
+
 
 class BruecknerSolver:
 
@@ -44,18 +94,16 @@ class BruecknerSolver:
 
         for i in range(self.max_iter):
 
-            self.mf.run()
-
             if self.solver_type == 'fci':
                 solver = FCISolver(self.mf) 
             else:
                 solver = VQESolver(self.mf)
 
-            estimator = GroundStateEstimator(self.mf, solver, verbose=4)
+            estimator = GroundStateEstimator(self.mf, solver)
 
             E, c0, c1, _ = estimator.estimate_ground_state(
-                n_samples=1000,
-                n_k_estimators=40,
+                n_samples=100,
+                n_k_estimators=10,
                 n_jobs=1,
                 calc_c1=True
             )
@@ -63,8 +111,8 @@ class BruecknerSolver:
             singles = get_single_excitations(self.mf)
 
             c1_exact = np.array([estimator.trial.data[s.bitstring.to_int()] for s in singles])
-            nocc, _ = mf.mol.nelec
-            norb = mf.mo_coeff.shape[0]
+            nocc, _ = self.mf.mol.nelec
+            norb = self.mf.mo_coeff.shape[0]
             nvirt = norb - nocc
             t1_exact = np.empty((nocc, nvirt), dtype=np.float64)
             for c, e in zip(c1_exact, singles):
@@ -75,7 +123,7 @@ class BruecknerSolver:
             ref_idx = get_hf_reference(self.mf).to_int()
             exact_c0 = estimator.trial.data[ref_idx]
 
-            t1 = t1_exact.real 
+            t1 = - t1_exact.real / exact_c0.real
 
             norm = np.linalg.norm(t1)
 
@@ -128,40 +176,45 @@ class BruecknerSolver:
         nocc, _ = self.mf.mol.nelec
         nvirt = norb - nocc
 
-        if not t1.shape == (nocc, nvirt):
-            raise ValueError("Incorrect shape for T1 amplitudes.")
+        kappa = np.zeros((norb, norb))
+        kappa[nocc:, :nocc] = t1.T
+        kappa[:nocc, nocc:] = -t1
+
+        # if not t1.shape == (nocc, nvirt):
+        #     raise ValueError("Incorrect shape for T1 amplitudes.")
         
-        ovlp = self.mf.get_ovlp()
-        if np.allclose(ovlp, np.eye(ovlp.shape[-1])):
-            ovlp = None
+        # ovlp = self.mf.get_ovlp()
+        # if np.allclose(ovlp, np.eye(ovlp.shape[-1])):
+        #     ovlp = None
 
-        bmo_occ, bmo_vir = self._update_mo_coeff(mo_coeff, t1, ovlp, damping=damping, diis=diis)
+        # bmo_occ, bmo_vir = self._update_mo_coeff(mo_coeff, t1, ovlp, damping=damping, diis=diis)
 
-        if canonicalize:
-            if canonicalize == "hcore":
-                h1e = self.mf.get_hcore()
-            else:
-                h1e = self.mf.get_fock()
-            _, r = np.linalg.eigh(np.linalg.multi_dot((bmo_occ.T, h1e, bmo_occ)))
-            bmo_occ = np.dot(bmo_occ, r)
-            _, r = np.linalg.eigh(np.linalg.multi_dot((bmo_vir.T, h1e, bmo_vir)))
-            bmo_vir = np.dot(bmo_vir, r)
+        # if canonicalize:
+        #     if canonicalize == "hcore":
+        #         h1e = self.mf.get_hcore()
+        #     else:
+        #         h1e = self.mf.get_fock()
+        #     _, r = np.linalg.eigh(np.linalg.multi_dot((bmo_occ.T, h1e, bmo_occ)))
+        #     bmo_occ = np.dot(bmo_occ, r)
+        #     _, r = np.linalg.eigh(np.linalg.multi_dot((bmo_vir.T, h1e, bmo_vir)))
+        #     bmo_vir = np.dot(bmo_vir, r)
 
-        bmo = np.hstack((bmo_occ, bmo_vir))
-        if ovlp is None:
-            assert np.allclose(np.dot(bmo.T, bmo), np.eye(norb))
-        else:
-            assert np.allclose(np.linalg.multi_dot((bmo.T, ovlp, bmo)), np.eye(norb))
+        # bmo = np.hstack((bmo_occ, bmo_vir))
+        # if ovlp is None:
+        #     assert np.allclose(np.dot(bmo.T, bmo), np.eye(norb))
+        # else:
+        #     assert np.allclose(np.linalg.multi_dot((bmo.T, ovlp, bmo)), np.eye(norb))
 
-        if ovlp is None:
-            assert np.allclose(np.dot(bmo.T, bmo), np.eye(norb))
-        else:
-            assert np.allclose(np.linalg.multi_dot((bmo.T, ovlp, bmo)), np.eye(norb))
+        # if ovlp is None:
+        #     assert np.allclose(np.dot(bmo.T, bmo), np.eye(norb))
+        # else:
+        #     assert np.allclose(np.linalg.multi_dot((bmo.T, ovlp, bmo)), np.eye(norb))
 
-        self.mf.mo_coeff = bmo
+        self.mf.mo_coeff = mo_coeff @ expm(kappa)
         self.mf.e_tot = self.mf.energy_tot()
-        return self.mf
 
+        return self.mf
+    
     def _update_mo_coeff(self, mo_coeff: np.ndarray, t1: np.ndarray, ovlp: Optional[np.ndarray] = None, damping: np.float64 = 0.0, diis: Optional[lib.diis.DIIS] = None):
 
         nocc, nvir = t1.shape
@@ -211,7 +264,7 @@ if __name__ == "__main__":
     from shadow_ci.utils import make_hydrogen_chain
     from pyscf import gto
 
-    atom = make_hydrogen_chain(4, bond_length=0.5)
+    atom = make_hydrogen_chain(4, bond_length=1.5)
     mol = gto.Mole()
     mol.build(atom=atom, basis="sto-3g")
 
