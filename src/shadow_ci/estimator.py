@@ -85,11 +85,12 @@ class GroundStateEstimator:
         c0 = self.estimate_reference_determinant(protocol)
 
         if calc_c1:
-            t_elapsed = time.perf_counter() - t_start
-            print(f"  ✓ c0 = {c0:.6f} (computed in {t_elapsed:.3f} s)")
 
 
             if self.verbose >= 1:
+                t_elapsed = time.perf_counter() - t_start
+                print(f"  ✓ c0 = {c0:.6f} (computed in {t_elapsed:.3f} s)")
+                
                 n_singles = len(get_single_excitations(self.mf))
                 print(f"\n[Phase 3/4] Estimating single excitation amplitudes (c1)...")
                 print(f"  - Number of single excitations: {n_singles}")
