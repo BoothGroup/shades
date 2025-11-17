@@ -1,14 +1,6 @@
 # Shades
 
-A Python package for scientific code development.
 
-## Features
-
-- Modern Python package structure with `src` layout
-- Scientific computing dependencies (NumPy, SciPy, Pandas, Matplotlib)
-- Testing infrastructure with pytest
-- Code quality tools (black, ruff, mypy)
-- Jupyter notebook support
 
 ## Installation
 
