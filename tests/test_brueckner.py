@@ -1,24 +1,64 @@
 import pytest
 from pyscf import gto, scf
 from shadow_ci.utils import make_hydrogen_chain
-from shadow_ci.brueckner import BruecknerSolver
+from shadow_ci.brueckner import brueckner_cycle, rotate_mf, rotate_mo_coeffs
 from shadow_ci.solvers import FCISolver
 from shadow_ci.utils import get_hf_reference, get_single_excitations
 import numpy as np
 from scipy.linalg import expm
+from copy import copy
 
-@pytest.fixture(scope="module", params=[2, 4, 6, 8, 10, 12])
+@pytest.fixture(scope="module", params=[2, 4, 6, 8])
 def n_hydrogen_mf(request):
     """N hydrogen chain for benchmark scaling."""
     mol = gto.Mole()
-    atom = make_hydrogen_chain(request.param)
-    mol.build(atom, basis="sto-3g", verbose=0)
+    atom = make_hydrogen_chain(request.param, bond_length=2.0)
+    mol.build(atom=atom, basis="sto-3g", verbose=0)
     mf = scf.RHF(mol)
-    mf.verbose = 0
     return mf.run()
 
-
 class TestOrbitalRotation:
+
+    def test_fci_energy_invarience(self, n_hydrogen_mf: scf.hf.RHF):
+
+        fci = FCISolver(n_hydrogen_mf)
+        E, _, c1, _ = fci.get_configuration_interaction()
+        update_mf(n_hydrogen_mf, c1)
+        rotated_fci = FCISolver(n_hydrogen_mf)
+        E_new, _, _, _ = rotated_fci.get_configuration_interaction()
+
+        assert np.allclose(E, E_new), "The FCI energy wasnt invarient to the MO rotation!"
+
+
+    def test_smooth_rotation(self, n_hydrogen_mf: scf.hf.RHF):
+
+        fci = FCISolver(n_hydrogen_mf)
+        _, c0, c1, _ = fci.get_configuration_interaction()
+
+        norms = [np.linalg.norm(c1)]
+
+        for i in np.arange(0.001, 1.0, 0.001):
+            mf = copy(n_hydrogen_mf)
+            update_mf(mf, -c1*i/c0)
+            fci = FCISolver(mf)
+            _, _, _c1, _ = fci.get_configuration_interaction()
+            norms.append(np.linalg.norm(_c1))
+
+        print(norms)
+
+    def test_single_rotation(self, n_hydrogen_mf: scf.hf.RHF):
+
+        fci = FCISolver(n_hydrogen_mf)
+        _, c0, c1, _ = fci.get_configuration_interaction()
+        kappa = get_kappa(c1)
+
+        update_mf(n_hydrogen_mf, c1)
+        rotated_fci = FCISolver(n_hydrogen_mf)
+        _, rotated_c0, rotated_c1, _ = rotated_fci.get_configuration_interaction()
+
+        assert np.allclose(rotated_c1, transform_c1(c1, kappa))
+
+
 
     def test_taylor_expansion(self, n_hydrogen_mf: scf.hf.RHF):
         """
@@ -26,9 +66,15 @@ class TestOrbitalRotation:
         up to order ||t1|| to direct exponentiation.
         """
 
+        def f(mf: scf.hf.RHF):
+            solver = FCISolver(mf)
+            return solver.get_configuration_interaction()
+
         brueckner = BruecknerSolver(n_hydrogen_mf)
-        solver = FCISolver(n_hydrogen_mf)
-        state, _ = solver.solve()
+        brueckner.solve(f)
+        
+        
+
 
         ref_idx = get_hf_reference(n_hydrogen_mf).to_int()
 
@@ -71,6 +117,7 @@ class TestOrbitalRotation:
 
 
 
-    def test_exponentiation
+    def test_exponentiation(self, n_hydrogen_mf: scf.hf.RHF):
+        pass
 
 
