@@ -1,45 +1,23 @@
 from shadow_ci.solvers.base import GroundStateSolver
-from typing import Tuple, Union
+from shadow_ci.utils import get_single_excitations
+from typing import Tuple, Union, Optional
 import numpy as np
-import pyscf.fci
 from qiskit.quantum_info import Statevector
-from pyscf import scf, ao2mo
+from pyscf import scf, fci, ci
 
+from shadow_ci.excitations import SinglesSector, get_hf_reference
 
 class FCISolver(GroundStateSolver):
 
+    civec: Optional[np.ndarray]
+
     def __init__(self, mf: Union[scf.hf.RHF, scf.uhf.UHF]):
         super().__init__(mf)
-        self._compute_integrals()
+        self.civec = None
 
-    def _compute_integrals(self):
-        """Compute and cache integrals from mf object."""
-        hcore = self.mf.get_hcore()
-        self.h1e = self.mf.mo_coeff.T @ hcore @ self.mf.mo_coeff
-        
-        eri_ao = self.mf.mol.intor('int2e')
-        self.h2e = ao2mo.full(eri_ao, self.mf.mo_coeff)
-        
-        self.norb = self.h1e.shape[0]
-        self.nelec = self.mf.mol.nelec
-        self.nuclear_repulsion = self.mf.mol.energy_nuc()
-
-    def solve(self, **options):
-
-        if isinstance(self.mf, scf.hf.RHF):
-            energy, civec = pyscf.fci.FCI(self.mf).kernel()
-            self.energy = energy
-        else:
-            energy, civec = pyscf.fci.direct_uhf.kernel(
-                self.h1e,
-                self.h2e,
-                self.norb,
-                self.nelec,
-                **options
-            )
-            self.energy = energy + self.nuclear_repulsion
-
-        self.state = self._civec_to_statevector(civec)
+    def solve(self) -> Tuple[np.float64, np.ndarray]:
+        self.energy, self.civec = fci.FCI(self.mf).kernel()
+        self.state = self._civec_to_statevector(self.civec)
         return self.state, self.energy
 
     def _civec_to_statevector(self, civec: np.ndarray) -> Statevector:
@@ -55,17 +33,16 @@ class FCISolver(GroundStateSolver):
             Qiskit Statevector in computational basis
         """
 
-        n_alpha, n_beta = self.nelec
-        norb = self.norb
+        n_alpha, n_beta = self.mf.mol.nelec
+        norb = self.mf.mo_coeff.shape[0]
         n_qubits = 2 * norb
 
         full_statevector = np.zeros(2**n_qubits, dtype=complex)
 
         if isinstance(self.mf, scf.hf.RHF):
-            from pyscf.fci import cistring
 
-            alpha_strings = cistring.make_strings(range(norb), n_alpha)
-            beta_strings = cistring.make_strings(range(norb), n_beta)
+            alpha_strings = fci.cistring.make_strings(range(norb), n_alpha)
+            beta_strings = fci.cistring.make_strings(range(norb), n_beta)
 
             for i_alpha, alpha_str in enumerate(alpha_strings):
                 for i_beta, beta_str in enumerate(beta_strings):
@@ -75,10 +52,9 @@ class FCISolver(GroundStateSolver):
 
                     full_statevector[qubit_index] = ci_coeff
         else:
-            from pyscf.fci import cistring
 
-            alpha_strings = cistring.make_strings(range(norb), n_alpha)
-            beta_strings = cistring.make_strings(range(norb), n_beta)
+            alpha_strings = fci.cistring.make_strings(range(norb), n_alpha)
+            beta_strings = fci.cistring.make_strings(range(norb), n_beta)
 
             civec_flat = civec.ravel()
 
@@ -91,3 +67,70 @@ class FCISolver(GroundStateSolver):
                     full_statevector[qubit_index] = ci_coeff
 
         return Statevector(full_statevector)
+
+    def get_configuration_interaction(self):
+        if not self.state: self.solve()
+        c0 = self._get_reference()
+        c1 = self._get_singles()
+        return self.energy, c0, c1, None
+
+    def _get_reference(self) -> np.float64:
+        ref = get_hf_reference(self.mf)
+        return self.state[ref.to_int()].real
+
+    def _get_singles(self) -> np.ndarray:
+        singles = SinglesSector(self.mf)
+        t1 = singles.excitations_to_t1(lambda b: self.state[b.to_int()].real)
+        return t1
+
+    def estimate(
+        self, mf: Union[scf.hf.RHF, scf.uhf.UHF]
+    ) -> tuple[np.float64, np.float64, np.ndarray, np.ndarray]:
+        """Estimate ground state properties for a given mean-field object.
+
+        This method can be used as an estimator_fn for Brueckner optimization.
+
+        Args:
+            mf: Mean-field object (RHF or UHF)
+
+        Returns:
+            Tuple of (energy, c0, c1, c2) where c2 is currently None
+        """
+        self.mf = mf
+        self.solve()
+        return self.get_configuration_interaction()
+
+if __name__ == "__main__":
+
+    from shadow_ci.utils import make_hydrogen_chain
+    from pyscf import gto
+
+    atom = make_hydrogen_chain(6)
+    mol = gto.Mole()
+    mol.build(atom=atom, basis="sto-3g", verbose=0)
+
+    mf = scf.RHF(mol)
+    mf.run()
+
+    solver = FCISolver(mf)
+
+    solver.solve()
+
+
+    mo_coeff = mf.mo_coeff
+    norb = mo_coeff.shape[-1]
+    nocc, _ = mf.mol.nelec
+    
+    print(solver.get_configuration_interaction())
+
+
+    myci = ci.CISD(mf).run()
+
+    # Extract amplitudes from CI vector
+    norb = mf.mo_coeff.shape[1]
+    nocc = mol.nelectron // 2
+
+    # Unpack the CI vector
+    c0, c1, c2 = myci.cisdvec_to_amplitudes(myci.ci, norb, nocc)
+    print(f"c0 = {c0}")
+    print(f"c1 (t1 amplitudes):\n{c1}")
