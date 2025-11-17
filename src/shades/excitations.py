@@ -1,6 +1,6 @@
 from typing import List, Callable, Literal, Union
 from dataclasses import dataclass
-from shadow_ci.utils import Bitstring
+from shades.utils import Bitstring
 import numpy as np
 from numpy.typing import NDArray
 from pyscf import scf

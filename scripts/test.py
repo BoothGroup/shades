@@ -1,9 +1,9 @@
 from pyscf import gto, scf
-from shadow_ci.hamiltonian import MolecularHamiltonian
-from shadow_ci.estimator import GroundStateEstimator
-from shadow_ci.solvers import FCISolver
-from shadow_ci.utils import make_hydrogen_chain
-from shadow_ci.shadows import ShadowProtocol
+from shades.hamiltonian import MolecularHamiltonian
+from shades.estimator import GroundStateEstimator
+from shades.solvers import FCISolver
+from shades.utils import make_hydrogen_chain
+from shades.shadows import ShadowProtocol
 import numpy as np
 import matplotlib.pyplot as plt
 from plotting_config import setup_plotting_style, save_figure

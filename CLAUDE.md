@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Shadow CI is a quantum chemistry research package that implements **classical shadow tomography** for ground state energy estimation. It combines quantum information techniques with traditional quantum chemistry (PySCF) to estimate molecular ground states and correlation energies using the shadow tomography protocol.
+Shades is a quantum chemistry research package that implements **classical shadow tomography** for ground state energy estimation. It combines quantum information techniques with traditional quantum chemistry (PySCF) to estimate molecular ground states and correlation energies using the shadow tomography protocol.
 
 **Core Scientific Method**: The package uses the "mixed energy estimator" approach to approximate ground state wavefunctions via classical shadow measurements. It leverages Clifford group sampling to efficiently estimate excitation amplitudes (c1, c2) from quantum states, then contracts these with molecular integrals to compute correlation energies.
 
@@ -28,7 +28,7 @@ pytest
 pytest tests/test_shadow_protocol.py
 
 # Run with coverage report
-pytest --cov=shadow_ci --cov-report=term-missing
+pytest --cov=shades --cov-report=term-missing
 
 # Run single test by name
 pytest tests/test_shadow_protocol.py::test_collect_samples
@@ -62,7 +62,7 @@ python benchmarks/benchmark_shadow_scaling.py
 
 ### Core Components
 
-**1. Molecular Hamiltonian ([hamiltonian.py](src/shadow_ci/hamiltonian.py))**
+**1. Molecular Hamiltonian ([hamiltonian.py](src/shades/hamiltonian.py))**
 - Bridge between PySCF quantum chemistry and shadow tomography
 - Stores one-electron (h1e) and two-electron (h2e) integrals in MO basis
 - Generates single/double excitations with RHF symmetry optimization
@@ -70,7 +70,7 @@ python benchmarks/benchmark_shadow_scaling.py
 - **Bitstring convention**: Little-endian (bit i from right = orbital i)
 - For RHF systems: Exploits spin symmetry to reduce unique excitations by ~40%
 
-**2. Shadow Protocol ([shadows.py](src/shadow_ci/shadows.py))**
+**2. Shadow Protocol ([shadows.py](src/shades/shadows.py))**
 - Implements classical shadow tomography using Clifford group sampling
 - Collects measurement snapshots: (bitstring, Clifford tableau) pairs
 - Computes overlaps via stabilizer formalism and Gaussian elimination
@@ -78,13 +78,13 @@ python benchmarks/benchmark_shadow_scaling.py
 - Parallelization: `n_jobs > 1` for multi-core sampling and estimation
 - **Critical**: Uses median-of-means (K estimators) for robust statistical estimation
 
-**3. Ground State Solvers ([solvers/](src/shadow_ci/solvers/))**
+**3. Ground State Solvers ([solvers/](src/shades/solvers/))**
 - Base class: `GroundStateSolver` (abstract interface)
 - `FCISolver`: PySCF Full CI solver for exact ground states
 - `VQESolver`: Variational Quantum Eigensolver with UCC ansatz
 - All solvers convert final states to Qiskit `Statevector` format
 
-**4. Ground State Estimator ([estimator.py](src/shadow_ci/estimator.py))**
+**4. Ground State Estimator ([estimator.py](src/shades/estimator.py))**
 - Main entry point for shadow-based energy estimation
 - Workflow:
   1. Collect shadow samples from trial state
@@ -94,7 +94,7 @@ python benchmarks/benchmark_shadow_scaling.py
   5. Contract amplitudes with Fock matrix and ERIs to compute E_corr
 - Returns: (total_energy, c0, c1, c2)
 
-**5. Utilities ([utils.py](src/shadow_ci/utils.py))**
+**5. Utilities ([utils.py](src/shades/utils.py))**
 - `Bitstring`: Custom bitstring class with stabilizer conversion
 - `SingleExcitation`, `DoubleExcitation`: Dataclasses for excitations
 - `SingleAmplitudes`, `DoubleAmplitudes`: Amplitude tensor management
@@ -148,9 +148,9 @@ For restricted Hartree-Fock systems, the code automatically:
 ### Running Ground State Estimation
 ```python
 from pyscf import gto, scf
-from shadow_ci.hamiltonian import MolecularHamiltonian
-from shadow_ci.solvers import FCISolver
-from shadow_ci.estimator import GroundStateEstimator
+from shades.hamiltonian import MolecularHamiltonian
+from shades.solvers import FCISolver
+from shades.estimator import GroundStateEstimator
 
 # Setup molecule
 mol = gto.Mole()
@@ -184,7 +184,7 @@ python benchmarks/benchmark_shadow_scaling.py --n-samples 100 500 1000 2000
 
 ## File Organization
 
-- `src/shadow_ci/`: Main package code
+- `src/shades/`: Main package code
   - `hamiltonian.py`: Molecular Hamiltonian and excitation generation
   - `shadows.py`: Shadow protocol and overlap estimation
   - `estimator.py`: Main ground state estimator

@@ -9,7 +9,7 @@ from scipy.linalg import eigh, expm
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.WARNING)  # Default level
+logger.setLevel(logging.WARNING)
 
 def make_kappa(t1: NDArray[np.float64]) -> NDArray[np.float64]:
 
@@ -191,8 +191,8 @@ def brueckner_cycle(
 
 if __name__ == "__main__":
 
-    from shadow_ci.solvers import FCISolver
-    from shadow_ci.utils import make_hydrogen_chain
+    from shades.solvers import FCISolver
+    from shades.utils import make_hydrogen_chain
     from pyscf import gto, scf
 
     atom = make_hydrogen_chain(10, bond_length=1.5)

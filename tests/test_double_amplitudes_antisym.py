@@ -7,7 +7,7 @@ alpha-beta excitations.
 
 import pytest
 import numpy as np
-from shadow_ci.utils import DoubleExcitation, DoubleAmplitudes, Bitstring
+from shades.utils import DoubleExcitation, DoubleAmplitudes, Bitstring
 
 
 class TestDoubleAmplitudesAntisymmetrization:

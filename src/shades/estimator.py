@@ -1,8 +1,8 @@
 from typing import Union
 from pyscf import scf
-from shadow_ci.utils import DoubleExcitation, SingleExcitation, get_hf_reference, get_double_excitations, get_single_excitations, compute_correlation_energy
-from shadow_ci.solvers import GroundStateSolver
-from shadow_ci.shadows import ShadowProtocol
+from shades.utils import DoubleExcitation, SingleExcitation, get_hf_reference, get_double_excitations, get_single_excitations, compute_correlation_energy
+from shades.solvers import GroundStateSolver
+from shades.shadows import ShadowProtocol
 
 from pyscf.ci.cisd import tn_addrs_signs
 import numpy as np

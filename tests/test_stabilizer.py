@@ -1,9 +1,9 @@
-"""Tests for stabilizer utility functions in shadow_ci.utils."""
+"""Tests for stabilizer utility functions in shades.utils."""
 
 import pytest
 import stim
 import numpy as np
-from shadow_ci.utils import (
+from shades.utils import (
     Bitstring,
     gaussian_elimination,
     apply_stabilizer_to_state,
@@ -451,7 +451,7 @@ class TestPaperExample:
             print(f"  S_{i}: {stab}")
 
         # Import canonicalize function
-        from shadow_ci.utils import canonicalize, compute_x_rank
+        from shades.utils import canonicalize, compute_x_rank
 
         # Canonicalize the stabilizers
         stabilizers_canonical = canonicalize(stabilizers_composed)
@@ -484,7 +484,7 @@ class TestPaperExample:
 
         print(f"Reference state |b'⟩ from stabilizer state: {ref_state.to_string()}")
 
-        from shadow_ci.utils import gaussian_elimination
+        from shades.utils import gaussian_elimination
 
         # Compute phase for overlap with vacuum
         phase = gaussian_elimination(stabilizers_canonical, ref_state, vacuum)
@@ -570,7 +570,7 @@ class TestPaperExample:
         for stab in stabilizers:
             print(f"  {stab}")
 
-        from shadow_ci.utils import compute_x_rank, gaussian_elimination
+        from shades.utils import compute_x_rank, gaussian_elimination
 
         x_rank = compute_x_rank(stabilizers)
         print(f"\nX-rank: {x_rank}")

@@ -12,7 +12,7 @@ from multiprocessing import Pool, shared_memory
 import time
 import warnings
 
-from shadow_ci.utils import Bitstring, gaussian_elimination, compute_x_rank, canonicalize
+from shades.utils import Bitstring, gaussian_elimination, compute_x_rank, canonicalize
 
 
 _SHM = None

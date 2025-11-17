@@ -512,7 +512,7 @@ def get_hf_reference(mf: Union[scf.hf.RHF, scf.uhf.UHF]) -> Bitstring:
     beta_string = [True] * n_beta + [False] * (norb - n_beta) 
     return Bitstring(alpha_string + beta_string, endianess='little')
 
-def get_single_excitations(mf: Union[scf.hf.RHF, scf.uhf.UHF]) -> List[SingleExcitation]:
+def get_single_excitations(mf: Union[scf.hf.RHF, scf.uhf.UHF], *, full_spectrum: bool = False) -> List[SingleExcitation]:
 
     n_alpha, n_beta = mf.mol.nelec
     norb = mf.mo_coeff.shape[0]
@@ -537,7 +537,7 @@ def get_single_excitations(mf: Union[scf.hf.RHF, scf.uhf.UHF]) -> List[SingleExc
                 n=n_alpha
             ))
 
-    if isinstance(mf, scf.hf.RHF): return excitations
+    if isinstance(mf, scf.hf.RHF) and not full_spectrum: return excitations
 
     n_qubits = 2 * norb
 
@@ -686,6 +686,9 @@ def compute_correlation_energy(
     ) / c0
 
     return e_singles + e_doubles
+
+
+
 
 if __name__ == "__main__":
     pass

@@ -1,9 +1,9 @@
 import pytest
 from pyscf import gto, scf
-from shadow_ci.utils import make_hydrogen_chain
-from shadow_ci.brueckner import brueckner_cycle, rotate_mf, rotate_mo_coeffs
-from shadow_ci.solvers import FCISolver
-from shadow_ci.utils import get_hf_reference, get_single_excitations
+from shades.utils import make_hydrogen_chain
+from shades.brueckner import brueckner_cycle, rotate_mf, rotate_mo_coeffs
+from shades.solvers import FCISolver
+from shades.utils import get_hf_reference, get_single_excitations
 import numpy as np
 from scipy.linalg import expm
 from copy import copy

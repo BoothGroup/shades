@@ -14,7 +14,7 @@ from qiskit_nature.second_q.mappers import (
 )
 from qiskit_nature.second_q.circuit.library import HartreeFock
 
-from shadow_ci.solvers.base import GroundStateSolver
+from shades.solvers.base import GroundStateSolver
 
 from qiskit_nature.second_q.drivers import PySCFDriver
 

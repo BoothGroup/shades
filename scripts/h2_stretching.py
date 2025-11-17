@@ -23,9 +23,9 @@ References:
 """
 
 from pyscf import gto, scf
-from shadow_ci.estimator import GroundStateEstimator
-from shadow_ci.solvers import FCISolver
-from shadow_ci.utils import make_hydrogen_chain
+from shades.estimator import GroundStateEstimator
+from shades.solvers import FCISolver
+from shades.utils import make_hydrogen_chain
 import numpy as np
 import matplotlib.pyplot as plt
 from plotting_config import setup_plotting_style, save_figure

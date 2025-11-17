@@ -5,12 +5,12 @@ a good estimate for the ground state energy blah..
 
 from pyscf import gto, scf
 import numpy as np
-from shadow_ci.shadows import ShadowProtocol
+from shades.shadows import ShadowProtocol
 from qiskit.quantum_info import Statevector
-from shadow_ci.utils import make_hydrogen_chain
-from shadow_ci.hamiltonian import MolecularHamiltonian
-from shadow_ci.estimator import GroundStateEstimator
-from shadow_ci.solvers import FCISolver
+from shades.utils import make_hydrogen_chain
+from shades.hamiltonian import MolecularHamiltonian
+from shades.estimator import GroundStateEstimator
+from shades.solvers import FCISolver
 
 def main():
 

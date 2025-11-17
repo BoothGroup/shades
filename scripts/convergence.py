@@ -16,9 +16,9 @@ Key convergence properties tested:
 """
 
 from pyscf import gto, scf
-from shadow_ci.estimator import GroundStateEstimator
-from shadow_ci.solvers import FCISolver
-from shadow_ci.utils import make_hydrogen_chain
+from shades.estimator import GroundStateEstimator
+from shades.solvers import FCISolver
+from shades.utils import make_hydrogen_chain
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt

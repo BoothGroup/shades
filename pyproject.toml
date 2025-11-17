@@ -3,7 +3,7 @@ requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "shadow-ci"
+name = "shades"
 version = "0.1.0"
 description = "A scientific code development package"
 readme = "README.md"
@@ -61,13 +61,13 @@ viz = [
 ]
 
 all = [
-    "shadow-ci[dev,ml,viz]",
+    "shades[dev,ml,viz]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/shadow-ci"
-Documentation = "https://github.com/yourusername/shadow-ci"
-Repository = "https://github.com/yourusername/shadow-ci"
+Homepage = "https://github.com/yourusername/shades"
+Documentation = "https://github.com/yourusername/shades"
+Repository = "https://github.com/yourusername/shades"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -79,7 +79,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
     "--verbose",
-    "--cov=shadow_ci",
+    "--cov=shades",
     "--cov-report=term-missing",
     "--cov-report=html",
 ]

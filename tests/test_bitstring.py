@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import stim
 from qiskit.quantum_info import Statevector
-from shadow_ci.utils import Bitstring
+from shades.utils import Bitstring
 
 
 class TestBitstringConstruction:

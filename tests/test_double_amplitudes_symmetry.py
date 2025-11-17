@@ -6,7 +6,7 @@ properties in spatial orbital representation.
 
 import numpy as np
 from pyscf import gto, scf, fci, cc
-from shadow_ci.utils import make_hydrogen_chain
+from shades.utils import make_hydrogen_chain
 
 
 def test_rhf_doubles_symmetry():

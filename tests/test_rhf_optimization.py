@@ -8,8 +8,8 @@ spin symmetry to reduce shadow measurements.
 import pytest
 import numpy as np
 from pyscf import gto, scf
-from shadow_ci.hamiltonian import MolecularHamiltonian
-from shadow_ci.utils import SingleAmplitudes, DoubleAmplitudes
+from shades.hamiltonian import MolecularHamiltonian
+from shades.utils import SingleAmplitudes, DoubleAmplitudes
 
 
 class TestRHFSymmetryOptimization:

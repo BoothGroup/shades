@@ -1,11 +1,11 @@
-from shadow_ci.solvers.base import GroundStateSolver
-from shadow_ci.utils import get_single_excitations
+from shades.solvers.base import GroundStateSolver
+from shades.utils import get_single_excitations
 from typing import Tuple, Union, Optional
 import numpy as np
 from qiskit.quantum_info import Statevector
 from pyscf import scf, fci, ci
 
-from shadow_ci.excitations import SinglesSector, get_hf_reference
+from shades.excitations import SinglesSector, get_hf_reference
 
 class FCISolver(GroundStateSolver):
 
@@ -102,7 +102,7 @@ class FCISolver(GroundStateSolver):
 
 if __name__ == "__main__":
 
-    from shadow_ci.utils import make_hydrogen_chain
+    from shades.utils import make_hydrogen_chain
     from pyscf import gto
 
     atom = make_hydrogen_chain(6)

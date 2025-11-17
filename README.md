@@ -1,4 +1,4 @@
-# Shadow CI
+# Shades
 
 A Python package for scientific code development.
 
@@ -77,9 +77,9 @@ mypy src/
 ## Project Structure
 
 ```
-shadow-ci/
+shades/
 ├── src/
-│   └── shadow_ci/          # Main package code
+│   └── shades/          # Main package code
 │       └── __init__.py
 ├── tests/                   # Test files
 │   └── __init__.py
@@ -91,7 +91,7 @@ shadow-ci/
 ## Usage
 
 ```python
-import shadow_ci
+import shades
 
 # Your scientific code here
 ```

@@ -1,1 +1,1 @@
-"""Tests for shadow_ci package."""
+"""Tests for shades package."""
